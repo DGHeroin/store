@@ -7,6 +7,7 @@ import (
     "io"
     "io/ioutil"
     "sync"
+    "time"
 )
 
 type (
@@ -15,6 +16,25 @@ type (
         m  map[string][]byte
     }
 )
+
+func (i *implMemory) Close() error {
+    return nil
+}
+
+func (i *implMemory) TTL(key string) (time.Duration, error) {
+    i.mu.RLock()
+    defer i.mu.RUnlock()
+    p, ok := i.m[key]
+    if !ok {
+        return 0, nil
+    }
+    ok, ttl, _ := utils.SplitData(p)
+    if !ok {
+        return -1, nil
+    }
+    durationSec := int64(ttl) - utils.GetTimeNow().Unix()
+    return time.Duration(durationSec) * time.Second, nil
+}
 
 func (i *implMemory) RangeKeys(prefix, limit string, max int) (result store.KeysInfoSlice, err error) {
     i.mu.RLock()
@@ -56,10 +76,10 @@ func (i *implMemory) Put(key string, value []byte) error {
     return i.PutTTL(key, value, 0)
 }
 
-func (i *implMemory) PutTTL(key string, value []byte, ttl int64) error {
+func (i *implMemory) PutTTL(key string, value []byte, ttl time.Duration) error {
     i.mu.Lock()
     defer i.mu.Unlock()
-    data := utils.CombineData(int(ttl), value)
+    data := utils.CombineData(ttl, value)
     i.m[key] = data
     return nil
 }
@@ -84,14 +104,14 @@ func (i *implMemory) RPut(key string, r io.Reader, size int64) error {
     return i.RPutTTL(key, r, size, 0)
 }
 
-func (i *implMemory) RPutTTL(key string, r io.Reader, _ int64, ttl int64) error {
+func (i *implMemory) RPutTTL(key string, r io.Reader, _ int64, ttl time.Duration) error {
     i.mu.Lock()
     defer i.mu.Unlock()
     value, err := ioutil.ReadAll(r)
     if err != nil {
         return err
     }
-    data := utils.CombineData(int(ttl), value)
+    data := utils.CombineData(ttl, value)
     i.m[key] = data
     return nil
 }

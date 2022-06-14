@@ -3,16 +3,20 @@ package store
 import (
     "errors"
     "io"
+    "time"
 )
 
 type (
     Store interface {
+        Close() error
         Put(key string, value []byte) error
-        PutTTL(key string, value []byte, ttl int64) error
+        PutTTL(key string, value []byte, ttl time.Duration) error
         Get(key string) ([]byte, error)
 
+        TTL(key string) (time.Duration, error)
+
         RPut(key string, r io.Reader, size int64) error
-        RPutTTL(key string, r io.Reader, size int64, ttl int64) error
+        RPutTTL(key string, r io.Reader, size int64, ttl time.Duration) error
         RGet(key string) (io.Reader, error)
 
         Exist(key string) (bool, error)

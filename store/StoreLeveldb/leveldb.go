@@ -9,6 +9,7 @@ import (
     "io"
     "io/ioutil"
     "os"
+    "time"
 )
 
 type (
@@ -16,6 +17,23 @@ type (
         db *leveldb.DB
     }
 )
+
+func (l leveldbImpl) Close() error {
+    return l.db.Close()
+}
+
+func (l leveldbImpl) TTL(key string) (time.Duration, error) {
+    p, err := l.db.Get([]byte(key), nil)
+    if err != nil {
+        return 0, err
+    }
+    ok, ttl, _ := utils.SplitData(p)
+    if !ok {
+        return -1, nil
+    }
+    durationSec := int64(ttl) - utils.GetTimeNow().Unix()
+    return time.Duration(durationSec) * time.Second, nil
+}
 
 func (l leveldbImpl) RangeKeys(prefix, limit string, max int) (result store.KeysInfoSlice, err error) {
     db := l.db
@@ -69,7 +87,7 @@ func (l leveldbImpl) RPut(key string, r io.Reader, size int64) error {
     return l.RPutTTL(key, r, size, 0)
 }
 
-func (l leveldbImpl) RPutTTL(key string, r io.Reader, size int64, ttl int64) error {
+func (l leveldbImpl) RPutTTL(key string, r io.Reader, _ int64, ttl time.Duration) error {
     value, err := ioutil.ReadAll(r)
     if err != nil {
         return err
@@ -89,8 +107,8 @@ func (l leveldbImpl) Put(key string, value []byte) error {
     return l.db.Put([]byte(key), utils.CombineData(0, value), nil)
 }
 
-func (l leveldbImpl) PutTTL(key string, value []byte, ttl int64) error {
-    return l.db.Put([]byte(key), utils.CombineData(int(ttl), value), nil)
+func (l leveldbImpl) PutTTL(key string, value []byte, ttl time.Duration) error {
+    return l.db.Put([]byte(key), utils.CombineData(ttl, value), nil)
 }
 
 func (l leveldbImpl) Get(key string) ([]byte, error) {

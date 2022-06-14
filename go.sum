@@ -1,3 +1,5 @@
+github.com/DGHeroin/redcon v1.4.3 h1:fxbFXcpFMp2Ka5PAvDVIyE8h7up9wvJy7moWb2L0lvw=
+github.com/DGHeroin/redcon v1.4.3/go.mod h1:nvsZpvkais2xVebXgJzlDBM0pFIEwPv84MaXEbgVepU=
 github.com/cespare/xxhash/v2 v2.1.2 h1:YRXhKfTDauu4ajMg1TPgFO5jnlC2HCbmLXMcTG5cbYE=
 github.com/cespare/xxhash/v2 v2.1.2/go.mod h1:VGX0DQ3Q6kWi7AoAeZDth3/j3BFtOZR5XLFGgcrjCOs=
 github.com/chzyer/logex v1.1.10/go.mod h1:+Ywpsq7O8HXn0nuIou7OrIPyXbp3wmkHB+jjWRnGsAI=

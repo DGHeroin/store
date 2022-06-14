@@ -21,6 +21,14 @@ type (
     }
 )
 
+func (s redisImpl) Close() error {
+    return s.client.Close()
+}
+
+func (s redisImpl) TTL(key string) (time.Duration, error) {
+    return s.client.TTL(context.Background(), key).Result()
+}
+
 func (s redisImpl) RangeKeys(prefix, limit string, max int) (result store.KeysInfoSlice, err error) {
     cli := s.client
     ctx := context.Background()
@@ -108,7 +116,7 @@ func (s redisImpl) RPut(key string, r io.Reader, size int64) error {
     return s.RPutTTL(key, r, size, 0)
 }
 
-func (s redisImpl) RPutTTL(key string, r io.Reader, _ int64, ttl int64) error {
+func (s redisImpl) RPutTTL(key string, r io.Reader, _ int64, ttl time.Duration) error {
     value, err := ioutil.ReadAll(r)
     if err != nil {
         return err
@@ -144,8 +152,8 @@ func (s redisImpl) Get(key string) ([]byte, error) {
     return r, err
 }
 
-func (s redisImpl) PutTTL(key string, value []byte, ttl int64) error {
-    return s.client.Set(context.Background(), key, value, time.Duration(ttl)).Err()
+func (s redisImpl) PutTTL(key string, value []byte, ttl time.Duration) error {
+    return s.client.Set(context.Background(), key, value, ttl).Err()
 }
 func (s redisImpl) Delete(key string) error {
     return s.client.Del(context.Background(), key).Err()

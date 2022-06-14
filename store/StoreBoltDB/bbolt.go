@@ -9,6 +9,7 @@ import (
     "io/ioutil"
     "os"
     "strings"
+    "time"
 )
 
 type (
@@ -17,6 +18,31 @@ type (
         db         *bolt.DB
     }
 )
+
+func (b boltImpl) Close() error {
+    return b.db.Close()
+}
+
+func (b boltImpl) TTL(key string) (r time.Duration, err error) {
+    err = b.db.View(func(tx *bolt.Tx) error {
+        bucket := tx.Bucket(b.bucketName)
+        if bucket == nil {
+            return store.Nil
+        }
+        p := bucket.Get([]byte(key))
+        if p == nil {
+            return store.Nil
+        }
+        ok, ttl, _ := utils.SplitData(p)
+        if !ok {
+            return store.Nil
+        }
+        durationSec := int64(ttl) - utils.GetTimeNow().Unix()
+        r = time.Duration(durationSec) * time.Second
+        return nil
+    })
+    return
+}
 
 func (b boltImpl) RangeKeys(prefix, limit string, max int) (result store.KeysInfoSlice, err error) {
     db := b.db
@@ -86,7 +112,7 @@ func (b boltImpl) RPut(key string, r io.Reader, size int64) error {
     return b.RPutTTL(key, r, size, 0)
 }
 
-func (b boltImpl) RPutTTL(key string, r io.Reader, _ int64, ttl int64) error {
+func (b boltImpl) RPutTTL(key string, r io.Reader, _ int64, ttl time.Duration) error {
     value, err := ioutil.ReadAll(r)
     if err != nil {
         return err
@@ -112,13 +138,13 @@ func (b boltImpl) Put(key string, value []byte) error {
     })
 }
 
-func (b boltImpl) PutTTL(key string, value []byte, ttl int64) error {
+func (b boltImpl) PutTTL(key string, value []byte, ttl time.Duration) error {
     return b.db.Update(func(tx *bolt.Tx) error {
         b, err := tx.CreateBucketIfNotExists(b.bucketName)
         if err != nil {
             return err
         }
-        return b.Put([]byte(key), utils.CombineData(int(ttl), value))
+        return b.Put([]byte(key), utils.CombineData(ttl, value))
     })
 }
 

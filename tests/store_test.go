@@ -5,6 +5,7 @@ import (
     "io"
     "io/ioutil"
     "testing"
+    "time"
 )
 
 func doTestStore(t *testing.T, s store.Store) {
@@ -31,6 +32,11 @@ func doTestStore(t *testing.T, s store.Store) {
         t.Log("Range:", key, data)
         return true
     })
+    // test ttl
+    _ = s.PutTTL("hello", []byte{9, 9, 9}, time.Second*10)
+    time.Sleep(time.Second)
+    ttl, _ := s.TTL("hello")
+    t.Log("ttl:", ttl)
 }
 func tIfError(t *testing.T, err error) {
     if err != nil {

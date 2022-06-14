@@ -1,6 +1,9 @@
 package store
 
-import "io"
+import (
+    "io"
+    "time"
+)
 
 type (
     chain struct {
@@ -8,6 +11,24 @@ type (
     }
     StSlice []Store
 )
+
+func (c chain) Close() error {
+    c.list.Range(func(store Store) bool {
+        _ = store.Close()
+        return true
+    })
+    return nil
+}
+
+func (c chain) TTL(key string) (r time.Duration, err error) {
+    c.list.Range(func(store Store) bool {
+        if r, err = store.TTL(key); err == nil {
+            return false
+        }
+        return true
+    })
+    return
+}
 
 func (c chain) RangeKeys(prefix, limit string, max int) (result KeysInfoSlice, err error) {
     c.list.Range(func(store Store) bool {
@@ -43,7 +64,7 @@ func (c chain) RPut(key string, r io.Reader, size int64) error {
     return c.RPutTTL(key, r, size, 0)
 }
 
-func (c chain) RPutTTL(key string, r io.Reader, size int64, ttl int64) (err error) {
+func (c chain) RPutTTL(key string, r io.Reader, size int64, ttl time.Duration) (err error) {
     c.list.RevRange(func(v Store) bool {
         if err = v.RPutTTL(key, r, size, ttl); err != nil {
             return false
@@ -73,7 +94,7 @@ func (c chain) Put(key string, value []byte) error {
     return nil
 }
 
-func (c chain) PutTTL(key string, value []byte, ttl int64) error {
+func (c chain) PutTTL(key string, value []byte, ttl time.Duration) error {
     for i := len(c.list) - 1; i >= 0; i-- {
         store := c.list[i]
         if err := store.PutTTL(key, value, ttl); err != nil {

@@ -12,6 +12,7 @@ import (
     "math"
     "os"
     "strings"
+    "time"
 )
 
 type (
@@ -20,6 +21,14 @@ type (
         client     *minio.Client
     }
 )
+
+func (s s3Impl) Close() error {
+    return nil
+}
+
+func (s s3Impl) TTL(_ string) (time.Duration, error) {
+    return 0, nil
+}
 
 func (s s3Impl) RangeKeys(prefix, limit string, max int) (result store.KeysInfoSlice, err error) {
     ch := s.client.ListObjects(context.Background(), s.bucketName, minio.ListObjectsOptions{
@@ -79,7 +88,7 @@ func (s s3Impl) RPut(key string, r io.Reader, size int64) error {
     return s.RPutTTL(key, r, size, 0)
 }
 
-func (s s3Impl) RPutTTL(key string, r io.Reader, size, _ int64) error {
+func (s s3Impl) RPutTTL(key string, r io.Reader, size int64, _ time.Duration) error {
     _, err := s.client.PutObject(context.Background(), s.bucketName, key, r, size, minio.PutObjectOptions{})
     return err
 }
@@ -92,7 +101,7 @@ func (s s3Impl) Put(key string, value []byte) error {
     return s.PutTTL(key, value, 0)
 }
 
-func (s s3Impl) PutTTL(key string, value []byte, _ int64) error {
+func (s s3Impl) PutTTL(key string, value []byte, _ time.Duration) error {
     return s.RPutTTL(key, bytes.NewBuffer(value), int64(len(value)), 0)
 }
 

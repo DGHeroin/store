@@ -6,7 +6,7 @@ import (
     "github.com/DGHeroin/store/utils"
     "io"
     "io/ioutil"
-    "log"
+    "time"
 )
 
 type (
@@ -14,6 +14,23 @@ type (
         m *utils.LRU
     }
 )
+
+func (i *implMemoryLRU) Close() error {
+    return nil
+}
+
+func (i *implMemoryLRU) TTL(key string) (time.Duration, error) {
+    p, ok := i.m.Get(key)
+    if !ok {
+        return 0, store.Nil
+    }
+    ok, ttl, _ := utils.SplitData(p.([]byte))
+    if !ok {
+        return -1, nil
+    }
+    durationSec := int64(ttl) - utils.GetTimeNow().Unix()
+    return time.Duration(durationSec) * time.Second, nil
+}
 
 func (i *implMemoryLRU) RangeKeys(prefix, limit string, max int) (result store.KeysInfoSlice, err error) {
     keysPtr := i.m.Keys()
@@ -42,8 +59,8 @@ func (i *implMemoryLRU) Put(key string, value []byte) error {
     return i.PutTTL(key, value, 0)
 }
 
-func (i *implMemoryLRU) PutTTL(key string, value []byte, ttl int64) error {
-    data := utils.CombineData(int(ttl), value)
+func (i *implMemoryLRU) PutTTL(key string, value []byte, ttl time.Duration) error {
+    data := utils.CombineData(ttl, value)
     i.m.Add(key, data)
     return nil
 }
@@ -66,13 +83,12 @@ func (i *implMemoryLRU) RPut(key string, r io.Reader, size int64) error {
     return i.RPutTTL(key, r, size, 0)
 }
 
-func (i *implMemoryLRU) RPutTTL(key string, r io.Reader, _ int64, ttl int64) error {
+func (i *implMemoryLRU) RPutTTL(key string, r io.Reader, _ int64, ttl time.Duration) error {
     value, err := ioutil.ReadAll(r)
     if err != nil {
         return err
     }
-    data := utils.CombineData(int(ttl), value)
-    log.Println("put", key, data)
+    data := utils.CombineData(ttl, value)
     i.m.Add(key, data)
     return nil
 }
