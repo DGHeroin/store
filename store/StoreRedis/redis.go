@@ -4,6 +4,7 @@ import (
     "bytes"
     "context"
     "crypto/tls"
+    "crypto/x509"
     "github.com/DGHeroin/store"
     "github.com/DGHeroin/store/utils"
     "github.com/go-redis/redis/v8"
@@ -179,9 +180,19 @@ func FromEnv() store.Store {
     }
     tlsCrt := os.Getenv("REDIS_TLS_CRT")
     tlsKey := os.Getenv("REDIS_TLS_KEY")
+    tlsCA := os.Getenv("REDIS_TLS_CA")
     if tlsKey != tlsCrt && tlsKey != "" {
         if cer, err := tls.LoadX509KeyPair(tlsCrt, tlsKey); err == nil {
-            opt.TLSConfig = &tls.Config{Certificates: []tls.Certificate{cer}}
+            opt.TLSConfig = &tls.Config{
+                Certificates: []tls.Certificate{cer},
+            }
+            if tlsCA != "" {
+                if caCert, err := ioutil.ReadFile(tlsCA); err == nil {
+                    rootCAs := x509.NewCertPool()
+                    rootCAs.AppendCertsFromPEM(caCert)
+                    opt.TLSConfig.ClientCAs = rootCAs
+                }
+            }
         }
     }
     return New(redis.NewClient(opt))
