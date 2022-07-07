@@ -184,7 +184,8 @@ func FromEnv() store.Store {
     if tlsKey != tlsCrt && tlsKey != "" {
         if cer, err := tls.LoadX509KeyPair(tlsCrt, tlsKey); err == nil {
             opt.TLSConfig = &tls.Config{
-                Certificates: []tls.Certificate{cer},
+                Certificates:       []tls.Certificate{cer},
+                InsecureSkipVerify: os.Getenv("REDIS_SKIP_VERIFY") == "true",
             }
             if tlsCA != "" {
                 if caCert, err := ioutil.ReadFile(tlsCA); err == nil {
