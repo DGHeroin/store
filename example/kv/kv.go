@@ -20,11 +20,14 @@ func main() {
     defer s.Close()
 
     key := "hello"
+    s.Put(key, []byte{6, 6, 6})
+    log.Println(s.Get(key))
     err = s.PutTTL(key, []byte{1, 2, 3}, time.Second*10)
     if err != nil {
         log.Fatalln("write err:", err)
         return
     }
+
     time.Sleep(time.Second)
     ttl, err := s.TTL(key)
     if err != nil {

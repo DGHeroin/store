@@ -20,9 +20,11 @@ func SplitData(val []byte) (bool, int, []byte) {
 func CombineData(ttl time.Duration, val []byte) []byte {
     buf := bytes.Buffer{}
     ttlByte := make([]byte, 4)
-    sec := int64(ttl) / int64(time.Second)
-    expireAt := uint32(GetTimeNow().Unix() + sec)
-    binary.BigEndian.PutUint32(ttlByte, expireAt)
+    if ttl > 0 {
+        sec := int64(ttl) / int64(time.Second)
+        expireAt := uint32(GetTimeNow().Unix() + sec)
+        binary.BigEndian.PutUint32(ttlByte, expireAt)
+    }
     buf.Write(ttlByte)
     buf.Write(val)
     return buf.Bytes()
