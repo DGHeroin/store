@@ -97,7 +97,7 @@ func (i *implMemory) Get(key string) ([]byte, error) {
             }()
         }
     }
-    return nil, store.Nil
+    return nil, nil
 }
 
 func (i *implMemory) RPut(key string, r io.Reader, size int64) error {

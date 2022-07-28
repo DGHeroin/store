@@ -110,7 +110,7 @@ func (c chain) Get(key string) ([]byte, error) {
             return data, err
         }
     }
-    return nil, Nil
+    return nil, nil
 }
 
 func (c chain) Exist(key string) (bool, error) {
@@ -121,7 +121,7 @@ func (c chain) Exist(key string) (bool, error) {
             }
         }
     }
-    return false, Nil
+    return false, nil
 }
 
 func (c chain) Delete(key string) error {

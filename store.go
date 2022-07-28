@@ -1,7 +1,6 @@
 package store
 
 import (
-    "errors"
     "io"
     "time"
 )
@@ -35,7 +34,6 @@ type (
 
 var (
     buckets = map[string]Store{}
-    Nil     = errors.New("store nil")
 )
 
 func Get(bucket string) Store {

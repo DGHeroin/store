@@ -22,7 +22,7 @@ func (i *implMemoryLRU) Close() error {
 func (i *implMemoryLRU) TTL(key string) (time.Duration, error) {
     p, ok := i.m.Get(key)
     if !ok {
-        return 0, store.Nil
+        return 0, nil
     }
     ok, ttl, _ := utils.SplitData(p.([]byte))
     if !ok {
@@ -76,7 +76,7 @@ func (i *implMemoryLRU) Get(key string) ([]byte, error) {
             }()
         }
     }
-    return nil, store.Nil
+    return nil, nil
 }
 
 func (i *implMemoryLRU) RPut(key string, r io.Reader, size int64) error {

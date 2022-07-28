@@ -27,15 +27,15 @@ func (b boltImpl) TTL(key string) (r time.Duration, err error) {
     err = b.db.View(func(tx *bolt.Tx) error {
         bucket := tx.Bucket(b.bucketName)
         if bucket == nil {
-            return store.Nil
+            return nil
         }
         p := bucket.Get([]byte(key))
         if p == nil {
-            return store.Nil
+            return nil
         }
         ok, ttl, _ := utils.SplitData(p)
         if !ok {
-            return store.Nil
+            return nil
         }
         durationSec := int64(ttl) - utils.GetTimeNow().Unix()
         r = time.Duration(durationSec) * time.Second
@@ -49,7 +49,7 @@ func (b boltImpl) RangeKeys(prefix, limit string, max int) (result store.KeysInf
     err = db.View(func(tx *bolt.Tx) error {
         b := tx.Bucket(b.bucketName)
         if b == nil {
-            return store.Nil
+            return nil
         }
         prefixBytes := []byte(prefix)
         cur := b.Cursor()
@@ -81,7 +81,7 @@ func (b boltImpl) Range(prefix, limit string, cb func(key string, value []byte) 
     return db.View(func(tx *bolt.Tx) error {
         b := tx.Bucket(b.bucketName)
         if b == nil {
-            return store.Nil
+            return nil
         }
         prefixBytes := []byte(prefix)
         cur := b.Cursor()
@@ -152,7 +152,7 @@ func (b boltImpl) Get(key string) (result []byte, err error) {
     err = b.db.View(func(tx *bolt.Tx) error {
         b := tx.Bucket(b.bucketName)
         if b == nil {
-            return store.Nil
+            return nil
         }
         data := b.Get([]byte(key))
         ok, _, val := utils.SplitData(data)
@@ -160,7 +160,7 @@ func (b boltImpl) Get(key string) (result []byte, err error) {
             go func() {
                 _ = b.Delete([]byte(key))
             }()
-            return store.Nil
+            return nil
         }
         result = utils.CopyBytes(val)
         return nil
@@ -172,7 +172,7 @@ func (b boltImpl) Exist(key string) (ok bool, err error) {
     err = b.db.View(func(tx *bolt.Tx) error {
         b := tx.Bucket(b.bucketName)
         if b == nil {
-            return store.Nil
+            return nil
         }
         data := b.Get([]byte(key))
         ok, _, _ = utils.SplitData(data)

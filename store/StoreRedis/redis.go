@@ -136,7 +136,7 @@ func (s redisImpl) RGet(key string) (io.Reader, error) {
 func (s redisImpl) Exist(key string) (bool, error) {
     val, err := s.client.Exists(context.Background(), key).Result()
     if err == redis.Nil {
-        err = store.Nil
+        err = nil
     }
     return val == 1, err
 }
@@ -148,7 +148,7 @@ func (s redisImpl) Put(key string, value []byte) error {
 func (s redisImpl) Get(key string) ([]byte, error) {
     r, err := s.client.Get(context.Background(), key).Bytes()
     if err == redis.Nil {
-        err = store.Nil
+        err = nil
     }
     return r, err
 }
