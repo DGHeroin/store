@@ -7,6 +7,9 @@ import (
 )
 
 func SplitData(val []byte) (bool, int, []byte) {
+    if len(val) == 0 {
+        return false, 0, nil
+    }
     ttl, data := val[:4], val[4:]
     sec := binary.BigEndian.Uint32(ttl)
     if sec > 0 && time.Unix(int64(sec), 0).Before(GetTimeNow()) {
